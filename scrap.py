@@ -5,15 +5,21 @@ URL = "https://www.rdveikals.lv/categories/lv/417/sort/1/filter/0_0_0_161000.171
 page = requests.get(URL)
 
 soup = BeautifulSoup(page.content, "html.parser")
-productGrid = soup.find(class_="product-list product-list--grid product-list--with-overlay row row--pad block-top block-none-bottom")
-productBlocks = productGrid.find_all("li", class_="col col--xs-4 product js-product js-touch-hover")
-products = dict()
+productGrids = soup.find_all(True, {'class':[
+    'product-list product-list--grid product-list--with-overlay row row--pad block-top block-none-bottom', # top row
+    'product-list product-list--grid product-list--with-overlay row row--pad block' # remaining grid
+    ]})
 
+productBlocks = []
+for gridElement in productGrids:
+    productBlocks += gridElement.find_all("li", class_="col col--xs-4 product js-product js-touch-hover")
+
+products = dict()
 for product in productBlocks:
     productTitle = product.find(class_="product__info").find(class_="product__title").text.strip()
     productTitle = productTitle.replace("\r\n                                ", " ") # clear spaces
-    productPrice = product.find(class_="product__info").find(class_="price").text.strip()
-    productPrice = productPrice.replace(" €", "") # get rid of euro sign
+    productPrice = product.find(class_="product__info").find(class_="price").get_text(strip=True)
+    productPrice = productPrice.replace("€", "") # get rid of euro sign
     products[productTitle] = productPrice
 
 for product, price in products.items():
